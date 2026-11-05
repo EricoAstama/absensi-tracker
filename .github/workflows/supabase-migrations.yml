@@ -54,7 +54,7 @@ jobs:
 
       - name: Link production project
         shell: bash
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Baseline migrations applied through SQL Editor
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.baseline_existing }}
