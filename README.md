@@ -28,3 +28,15 @@ npm run build
 ```
 
 RBAC: Employee hanya mengakses data sendiri; HC Admin dapat mengelola kehadiran, izin, lokasi, dan ekspor; hanya Superadmin yang dapat mengelola akun dan menghapus data. Endpoint ekspor menghasilkan workbook `.xlsx` dari data Supabase dan hanya tersedia untuk HC Admin/Superadmin.
+
+## CI migration Supabase
+
+Workflow `.github/workflows/supabase-migrations.yml` otomatis menjalankan migration baru ketika file di `supabase/migrations` berubah pada branch `main`.
+
+Tambahkan tiga GitHub Actions secrets pada repository atau environment `production`:
+
+- `SUPABASE_ACCESS_TOKEN` — dibuat dari Supabase Account → Access Tokens.
+- `SUPABASE_PROJECT_REF` — ID proyek dari URL `https://<project-ref>.supabase.co`.
+- `SUPABASE_DB_PASSWORD` — password database proyek, bukan service-role key.
+
+Karena migration `0001`–`0004` pertama kali dijalankan lewat SQL Editor, buka GitHub → Actions → **Supabase production migrations** → **Run workflow**, aktifkan `baseline_existing`, lalu jalankan satu kali. Workflow akan menandai empat migration tersebut sebagai applied dan memverifikasi bahwa tidak ada SQL lama yang dijalankan ulang. Push migration berikutnya ke `main` akan diterapkan otomatis setelah dry run berhasil.

@@ -1,0 +1,71 @@
+name: Supabase production migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+  workflow_dispatch:
+    inputs:
+      baseline_existing:
+        description: "Mark migrations 0001-0004 as already applied (one-time setup only)"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-production-migrations
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Apply database migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          missing=0
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_DB_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::$name is not configured in the production environment or repository secrets"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        shell: bash
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Baseline migrations applied through SQL Editor
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.baseline_existing }}
+        shell: bash
+        run: supabase migration repair 0001 0002 0003 0004 --status applied --linked
+
+      - name: Show migration status
+        run: supabase migration list --linked
+
+      - name: Preview pending migrations
+        run: supabase db push --linked --password "$SUPABASE_DB_PASSWORD" --dry-run
+
+      - name: Apply pending migrations
+        run: supabase db push --linked --password "$SUPABASE_DB_PASSWORD"
