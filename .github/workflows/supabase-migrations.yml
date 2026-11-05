@@ -59,13 +59,13 @@ jobs:
       - name: Baseline migrations applied through SQL Editor
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.baseline_existing }}
         shell: bash
-        run: supabase migration repair 0001 0002 0003 0004 --status applied --linked
+        run: supabase migration repair 0001 0002 0003 0004 --status applied --remote --yes
 
       - name: Show migration status
-        run: supabase migration list --linked
+        run: supabase migration list --remote
 
       - name: Preview pending migrations
-        run: supabase db push --linked --password "$SUPABASE_DB_PASSWORD" --dry-run
+        run: supabase db push --remote --password "$SUPABASE_DB_PASSWORD" --dry-run
 
       - name: Apply pending migrations
-        run: supabase db push --linked --password "$SUPABASE_DB_PASSWORD"
+        run: supabase db push --remote --password "$SUPABASE_DB_PASSWORD"
