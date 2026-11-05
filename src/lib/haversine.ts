@@ -1,0 +1,2 @@
+const EARTH_RADIUS_METERS=6_371_000; const rad=(v:number)=>v*Math.PI/180;
+export function haversineMeters(a:{latitude:number;longitude:number},b:{latitude:number;longitude:number}){const dLat=rad(b.latitude-a.latitude),dLng=rad(b.longitude-a.longitude);const x=Math.sin(dLat/2)**2+Math.cos(rad(a.latitude))*Math.cos(rad(b.latitude))*Math.sin(dLng/2)**2;return 2*EARTH_RADIUS_METERS*Math.asin(Math.sqrt(x))}
