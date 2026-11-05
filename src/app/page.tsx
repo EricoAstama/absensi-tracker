@@ -1,1 +1,3 @@
-import { redirect } from "next/navigation"; export default function Home(){redirect("/employee")}
+import { redirect } from "next/navigation";
+import { getSessionProfile } from "@/lib/auth";
+export default async function Home(){const session=await getSessionProfile();if(!session)redirect("/login");redirect(session.profile.role==="employee"?"/employee":"/hc")}

@@ -1,0 +1,9 @@
+import { createClient } from "@supabase/supabase-js";
+const required=["NEXT_PUBLIC_SUPABASE_URL","SUPABASE_SERVICE_ROLE_KEY","SEED_SUPERADMIN_EMAIL","SEED_SUPERADMIN_PASSWORD","SEED_EMPLOYEE_EMAIL","SEED_EMPLOYEE_PASSWORD"];
+const missing=required.filter(name=>!process.env[name]);if(missing.length)throw new Error(`Missing required variables: ${missing.join(", ")}`);
+const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{autoRefreshToken:false,persistSession:false}});
+const{error:rbacError}=await supabase.rpc("is_superadmin");if(rbacError)throw new Error("RBAC migration belum diterapkan. Jalankan migration 0001–0004 sebelum seed akun produksi.");
+async function findUser(email){for(let page=1;;page++){const{data,error}=await supabase.auth.admin.listUsers({page,perPage:100});if(error)throw error;const found=data.users.find(user=>user.email?.toLowerCase()===email.toLowerCase());if(found)return found;if(data.users.length<100)return null}}
+async function ensureAccount({email,password,fullName,role,department}){let user=await findUser(email);if(!user){const{data,error}=await supabase.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:fullName}});if(error)throw error;user=data.user}const{error}=await supabase.from("profiles").upsert({id:user.id,full_name:fullName,role,department,updated_at:new Date().toISOString()},{onConflict:"id"});if(error)throw error;console.log(`Ensured ${role} account: ${email}`)}
+await ensureAccount({email:process.env.SEED_SUPERADMIN_EMAIL,password:process.env.SEED_SUPERADMIN_PASSWORD,fullName:process.env.SEED_SUPERADMIN_NAME||"Production Superadmin",role:"superadmin",department:"Management"});
+await ensureAccount({email:process.env.SEED_EMPLOYEE_EMAIL,password:process.env.SEED_EMPLOYEE_PASSWORD,fullName:process.env.SEED_EMPLOYEE_NAME||"Production Employee",role:"employee",department:process.env.SEED_EMPLOYEE_DEPARTMENT||"General"});

@@ -1,1 +1,1 @@
-import {Sidebar}from"./Sidebar";export function Shell({children,role="employee"}:{children:React.ReactNode;role?:"employee"|"admin"}){return <><Sidebar role={role}/><main className="md:ml-64 min-h-screen p-5 md:p-9"><div className="max-w-6xl mx-auto">{children}</div></main></>}
+import {Sidebar}from"./Sidebar";export function Shell({children,role="employee"}:{children:React.ReactNode;role?:"employee"|"admin"}){return <><Sidebar role={role}/><main className="md:ml-64 min-h-screen px-4 pt-20 pb-28 md:p-9"><div className="max-w-6xl mx-auto">{children}</div></main></>}

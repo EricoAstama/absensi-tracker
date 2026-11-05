@@ -1,1 +1,12 @@
-import{MapPin,Plus,Users}from"lucide-react";import{Shell}from"@/components/Shell";import{Topbar}from"@/components/Topbar";export default function Settings(){return <Shell role="admin"><Topbar eyebrow="Konfigurasi" title="Lokasi & pekerja"/><div className="grid lg:grid-cols-2 gap-5"><section className="panel p-6"><div className="flex justify-between"><div><p className="label">Lokasi aktif</p><h2 className="font-black text-xl mt-1">Kantor Pusat</h2></div><MapPin className="text-[#196c4a]"/></div><div className="h-40 rounded-xl bg-[#e5ede7] mt-5 grid place-items-center text-[#196c4a]"><MapPin size={35}/></div><div className="grid grid-cols-2 gap-3 mt-4"><div><label className="label">Radius</label><input className="field mt-2" defaultValue="50 meter"/></div><div><label className="label">Status</label><select className="field mt-2"><option>Aktif</option></select></div></div><button className="btn btn-primary mt-4">Simpan lokasi</button></section><section className="panel p-6"><div className="flex justify-between"><div><p className="label">Master data</p><h2 className="font-black text-xl mt-1">42 pekerja</h2></div><Users className="text-[#196c4a]"/></div><div className="mt-5 space-y-3">{["Alya Putri · Product","Bima Ardi · Engineering","Citra Dewi · Finance","Dimas Setia · Operations"].map(x=><div key={x} className="border border-[var(--line)] rounded-xl p-3 text-sm font-bold">{x}</div>)}</div><button className="btn btn-secondary w-full mt-4"><Plus size={16}/>Tambah pekerja</button></section></div></Shell>}
+import { Users } from "lucide-react";
+import { LocationManager } from "@/components/LocationManager";
+import { Shell } from "@/components/Shell";
+import { Topbar } from "@/components/Topbar";
+import { getSessionProfile } from "@/lib/auth";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+export default async function Settings(){
+  const session=await getSessionProfile();const supabase=await createServerSupabaseClient();
+  const{data:locations}=await supabase.from("company_locations").select("id,name,latitude,longitude,radius_meters,is_active").order("name");
+  return <Shell role="admin"><Topbar eyebrow="Konfigurasi" title="Lokasi & pekerja"/><div className="grid xl:grid-cols-[1.35fr_.65fr] gap-5"><LocationManager locations={locations||[]} canManage={session?.profile.role==="superadmin"}/><section className="panel p-5 sm:p-6 h-fit"><div className="flex justify-between"><div><p className="label">Master data</p><h2 className="font-black text-xl mt-1">Pekerja</h2></div><Users className="text-[#196c4a]"/></div><p className="text-sm text-[var(--muted)] mt-4">Pengelolaan akun hanya tersedia untuk Superadmin. Role database mencegah HC Admin menaikkan hak akses pengguna.</p></section></div></Shell>
+}
