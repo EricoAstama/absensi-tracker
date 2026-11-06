@@ -1,40 +1,9 @@
 import { NextResponse } from "next/server";
+import type { EmployeeInput } from "@/lib/employee-input";
+import { validateEmployeeInput } from "@/lib/employee-input";
 import { getSessionProfile } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-
-type EmployeeInput = {
-  fullName?: unknown;
-  email?: unknown;
-  password?: unknown;
-  department?: unknown;
-};
-
-function text(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function validateEmployee(input: EmployeeInput) {
-  const fullName = text(input.fullName);
-  const email = text(input.email).toLowerCase();
-  const password = typeof input.password === "string" ? input.password : "";
-  const department = text(input.department);
-
-  if (fullName.length < 2 || fullName.length > 100) {
-    return { error: "Nama lengkap harus terdiri dari 2–100 karakter." } as const;
-  }
-  if (department.length < 2 || department.length > 80) {
-    return { error: "Departemen harus terdiri dari 2–80 karakter." } as const;
-  }
-  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { error: "Format email belum valid." } as const;
-  }
-  if (password.length < 8 || password.length > 72 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-    return { error: "Password harus 8–72 karakter serta memuat huruf dan angka." } as const;
-  }
-
-  return { data: { fullName, email, password, department } } as const;
-}
 
 export async function POST(request: Request) {
   const session = await getSessionProfile();
@@ -50,7 +19,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Data employee tidak dapat dibaca." }, { status: 400 });
   }
 
-  const validated = validateEmployee(body);
+  const validated = validateEmployeeInput(body, true);
   if ("error" in validated) return NextResponse.json({ message: validated.error }, { status: 422 });
 
   try {

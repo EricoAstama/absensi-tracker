@@ -27,11 +27,13 @@ npm run lint
 npm run build
 ```
 
-RBAC: Employee hanya mengakses data sendiri; HC Admin dapat mengelola kehadiran, izin, lokasi, dan ekspor; hanya Superadmin yang dapat mengelola akun dan menghapus data. Endpoint ekspor menghasilkan workbook `.xlsx` dari data Supabase dan hanya tersedia untuk HC Admin/Superadmin.
+RBAC: Employee hanya mengakses data sendiri; HC Admin dapat mengelola kehadiran, izin, dan ekspor; hanya Superadmin yang dapat mengelola akun serta lokasi dan menghapus data. Endpoint ekspor menghasilkan workbook `.xlsx` dari data Supabase dan hanya tersedia untuk HC Admin/Superadmin.
 
 ## Menambahkan employee
 
-Superadmin dapat membuka **Pengaturan → Tambah employee**, lalu mengisi nama, email login, departemen, dan password sementara. Tombol **Buat otomatis** menghasilkan password yang kuat. Setelah akun dibuat, salin kredensial yang ditampilkan dan bagikan kepada employee melalui kanal yang aman. Employee langsung dapat login tanpa perlu membuka dashboard Supabase.
+Superadmin dapat membuka **Pengaturan → Employee** untuk menambah, mengubah, mereset password, atau menghapus akun employee. Saat membuat akun, tombol **Buat otomatis** menghasilkan password yang kuat. Setelah akun dibuat, salin kredensial yang ditampilkan dan bagikan kepada employee melalui kanal yang aman. Employee langsung dapat login tanpa perlu membuka dashboard Supabase. Penghapusan employee juga menghapus presensi dan pengajuan yang terkait.
+
+Pada halaman yang sama, Superadmin dapat menambah, mengubah, mengaktifkan/nonaktifkan, dan menghapus lokasi kantor beserta koordinat dan radius geofencing.
 
 Fitur ini memakai `SUPABASE_SERVICE_ROLE_KEY` hanya di API server. Variabel tersebut wajib tersedia pada environment deployment dan tidak boleh memakai awalan `NEXT_PUBLIC_`. HC Admin dapat melihat daftar employee, tetapi endpoint akan menolak pembuatan akun selain dari Superadmin.
 

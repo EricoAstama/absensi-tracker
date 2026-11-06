@@ -13,3 +13,17 @@ export function createAdminSupabaseClient() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
+
+export async function listAuthUserEmails() {
+  const admin = createAdminSupabaseClient();
+  const emails = new Map<string, string>();
+
+  for (let page = 1; ; page += 1) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 100 });
+    if (error) throw error;
+    for (const user of data.users) emails.set(user.id, user.email || "");
+    if (data.users.length < 100) break;
+  }
+
+  return emails;
+}
