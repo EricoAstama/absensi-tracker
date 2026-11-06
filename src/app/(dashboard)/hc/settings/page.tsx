@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import { EmployeeManager } from "@/components/EmployeeManager";
 import { LocationManager } from "@/components/LocationManager";
 import { Shell } from "@/components/Shell";
 import { Topbar } from "@/components/Topbar";
@@ -7,6 +7,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export default async function Settings(){
   const session=await getSessionProfile();const supabase=await createServerSupabaseClient();
-  const{data:locations}=await supabase.from("company_locations").select("id,name,latitude,longitude,radius_meters,is_active").order("name");
-  return <Shell role="admin"><Topbar eyebrow="Konfigurasi" title="Lokasi & pekerja"/><div className="grid xl:grid-cols-[1.35fr_.65fr] gap-5"><LocationManager locations={locations||[]} canManage={session?.profile.role==="superadmin"}/><section className="panel p-5 sm:p-6 h-fit"><div className="flex justify-between"><div><p className="label">Master data</p><h2 className="font-black text-xl mt-1">Pekerja</h2></div><Users className="text-[#196c4a]"/></div><p className="text-sm text-[var(--muted)] mt-4">Pengelolaan akun hanya tersedia untuk Superadmin. Role database mencegah HC Admin menaikkan hak akses pengguna.</p></section></div></Shell>
+  const[{data:locations},{data:employees}]=await Promise.all([
+    supabase.from("company_locations").select("id,name,latitude,longitude,radius_meters,is_active").order("name"),
+    supabase.from("profiles").select("id,full_name,department,created_at").eq("role","employee").order("full_name"),
+  ]);
+  const canManage=session?.profile.role==="superadmin";
+  return <Shell role="admin"><Topbar eyebrow="Konfigurasi" title="Lokasi & employee"/><div className="grid xl:grid-cols-[1.15fr_.85fr] gap-5 items-start"><LocationManager locations={locations||[]} canManage={canManage}/><EmployeeManager employees={employees||[]} canManage={canManage}/></div></Shell>
 }

@@ -29,6 +29,12 @@ npm run build
 
 RBAC: Employee hanya mengakses data sendiri; HC Admin dapat mengelola kehadiran, izin, lokasi, dan ekspor; hanya Superadmin yang dapat mengelola akun dan menghapus data. Endpoint ekspor menghasilkan workbook `.xlsx` dari data Supabase dan hanya tersedia untuk HC Admin/Superadmin.
 
+## Menambahkan employee
+
+Superadmin dapat membuka **Pengaturan → Tambah employee**, lalu mengisi nama, email login, departemen, dan password sementara. Tombol **Buat otomatis** menghasilkan password yang kuat. Setelah akun dibuat, salin kredensial yang ditampilkan dan bagikan kepada employee melalui kanal yang aman. Employee langsung dapat login tanpa perlu membuka dashboard Supabase.
+
+Fitur ini memakai `SUPABASE_SERVICE_ROLE_KEY` hanya di API server. Variabel tersebut wajib tersedia pada environment deployment dan tidak boleh memakai awalan `NEXT_PUBLIC_`. HC Admin dapat melihat daftar employee, tetapi endpoint akan menolak pembuatan akun selain dari Superadmin.
+
 ## CI migration Supabase
 
 Workflow `.github/workflows/supabase-migrations.yml` otomatis menjalankan migration baru ketika file di `supabase/migrations` berubah pada branch `main`.
