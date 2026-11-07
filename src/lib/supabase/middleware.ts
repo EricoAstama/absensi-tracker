@@ -16,10 +16,11 @@ export async function updateSession(request: NextRequest) {
       },
     },
   });
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getClaims();
+  const hasUser = !error && Boolean(data?.claims?.sub);
   const path = request.nextUrl.pathname;
   const protectedRoute = path.startsWith("/employee") || path.startsWith("/hc") || path.startsWith("/api/export-attendance");
-  if (!user && protectedRoute) return NextResponse.redirect(new URL("/login", request.url));
-  if (user && path === "/login") return NextResponse.redirect(new URL("/", request.url));
+  if (!hasUser && protectedRoute) return NextResponse.redirect(new URL("/login", request.url));
+  if (hasUser && path === "/login") return NextResponse.redirect(new URL("/", request.url));
   return response;
 }

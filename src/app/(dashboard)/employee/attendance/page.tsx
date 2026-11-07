@@ -1,1 +1,6 @@
-import{AttendanceFlow}from"@/components/AttendanceFlow";import{Shell}from"@/components/Shell";import{Topbar}from"@/components/Topbar";export default function Attendance(){return <Shell><Topbar eyebrow="Presensi" title="Ambil selfie & lokasi"/><AttendanceFlow/></Shell>}
+import { AttendanceFlow } from "@/components/AttendanceFlow";
+import { Topbar } from "@/components/Topbar";
+
+export default function Attendance() {
+  return <><Topbar eyebrow="Presensi" title="Ambil selfie & lokasi"/><AttendanceFlow/></>;
+}
