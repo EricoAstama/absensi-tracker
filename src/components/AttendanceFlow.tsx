@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, CheckCircle2, LocateFixed, MapPin, RefreshCw } from "lucide-react";
-import { haversineMeters } from "@/lib/haversine";
+import { matchGeofence } from "@/lib/haversine";
 import { createClient } from "@/lib/supabase/client";
 
 type Phase="ready"|"starting"|"camera"|"preview"|"saving"|"done";
@@ -14,12 +14,12 @@ function activeSlot(minutes:number){if(minutes<=570)return 1;if(minutes<=735)ret
 function slotStatus(slot:number,minutes:number){const target=[0,450,690,780,990][slot];return slot===2||slot===4?(minutes>=target?"on_time":"early_out"):(minutes<=target?"on_time":"late")}
 
 export function AttendanceFlow(){
-  const[phase,setPhase]=useState<Phase>("ready"),[error,setError]=useState(""),[photo,setPhoto]=useState<Blob|null>(null),[preview,setPreview]=useState(""),[location,setLocation]=useState<GeolocationCoordinates|null>(null),[office,setOffice]=useState<Office|null>(null),[cameraReady,setCameraReady]=useState(false);
+  const[phase,setPhase]=useState<Phase>("ready"),[error,setError]=useState(""),[photo,setPhoto]=useState<Blob|null>(null),[preview,setPreview]=useState(""),[location,setLocation]=useState<GeolocationCoordinates|null>(null),[offices,setOffices]=useState<Office[]>([]),[locationsLoaded,setLocationsLoaded]=useState(false),[cameraReady,setCameraReady]=useState(false);
   const video=useRef<HTMLVideoElement>(null),stream=useRef<MediaStream|null>(null);const now=jakartaParts(),slot=activeSlot(now.minutes),info=slotInfo[slot-1];
-  const distance=useMemo(()=>location&&office?haversineMeters({latitude:location.latitude,longitude:location.longitude},{latitude:office.latitude,longitude:office.longitude}):null,[location,office]);
-  const inside=distance!==null&&office!==null&&distance<=office.radius_meters;
+  const locationMatch=useMemo(()=>location?matchGeofence({latitude:location.latitude,longitude:location.longitude},offices):null,[location,offices]);
+  const office=locationMatch?.location||null,distance=locationMatch?.distanceMeters??null,inside=locationMatch?.inside??false;
 
-  useEffect(()=>{createClient().from("company_locations").select("id,name,latitude,longitude,radius_meters").eq("is_active",true).limit(1).maybeSingle().then(({data,error})=>{if(data)setOffice(data);else if(error)setError("Lokasi kantor belum dapat dimuat. Hubungi administrator.");else setError("Belum ada lokasi kantor aktif.")})},[]);
+  useEffect(()=>{createClient().from("company_locations").select("id,name,latitude,longitude,radius_meters").eq("is_active",true).order("name").then(({data,error})=>{setLocationsLoaded(true);if(error)setError("Lokasi kantor belum dapat dimuat. Hubungi administrator.");else if(!data?.length)setError("Belum ada lokasi kantor aktif.");else setOffices(data)})},[]);
   useEffect(()=>{if(phase==="camera"&&video.current&&stream.current){video.current.srcObject=stream.current;video.current.play().catch(()=>setError("Preview kamera gagal dimulai. Tutup aplikasi kamera lain lalu coba lagi."))}},[phase]);
   useEffect(()=>{if(!photo){setPreview("");return}const url=URL.createObjectURL(photo);setPreview(url);return()=>URL.revokeObjectURL(url)},[photo]);
   useEffect(()=>()=>stream.current?.getTracks().forEach(track=>track.stop()),[]);
@@ -36,7 +36,7 @@ export function AttendanceFlow(){
       {phase==="camera"?<><video ref={video} autoPlay muted playsInline onLoadedMetadata={()=>setCameraReady(true)} className="w-full h-full object-cover -scale-x-100"/><button type="button" disabled={!cameraReady} onClick={capture} className="absolute bottom-5 h-16 w-16 rounded-full border-4 border-white bg-white/30 disabled:opacity-40" aria-label="Ambil foto"/></>:preview?<img src={preview} alt="Pratinjau selfie" className="w-full h-full object-cover"/>:<div className="text-center text-white/65 px-5"><Camera size={45} className="mx-auto mb-3"/><p className="font-bold">{phase==="starting"?"Membuka kamera…":"Selfie untuk verifikasi"}</p><p className="text-xs mt-1">Wajah harus terlihat jelas dan pencahayaan cukup</p></div>}
     </div>{phase==="ready"&&<button className="btn btn-primary w-full mt-3" onClick={startCamera}><Camera size={17}/>Aktifkan kamera</button>}{phase==="preview"&&<button className="btn btn-secondary w-full mt-3" onClick={retry}><RefreshCw size={16}/>Ambil ulang</button>}</div>
     <aside className="space-y-4"><div className="panel p-5"><p className="label">Slot aktif</p><h2 className="text-xl font-black mt-2">{info.name}</h2><p className="text-sm text-[var(--muted)]">Target {info.target}</p></div>
-      <div className="panel p-5"><div className="flex justify-between gap-2"><p className="label">Verifikasi lokasi</p>{distance!==null&&<span className={`badge ${inside?"bg-[#e5f7ed] text-[#176b49]":"bg-red-50 text-red-700"}`}>{inside?"Dalam area":"Di luar area"}</span>}</div><div className="h-28 rounded-xl bg-[#e6eee9] mt-3 grid place-items-center text-[#196c4a]"><MapPin size={30}/></div><p className="font-bold mt-3">{office?.name||"Memuat lokasi…"}</p><p className="text-xs text-[var(--muted)]">{location&&distance!==null?`Akurasi ±${Math.round(location.accuracy)} m · jarak ${Math.round(distance)} m · radius ${office?.radius_meters} m`:"Lokasi belum diverifikasi"}</p><button onClick={locate} className="btn btn-secondary w-full mt-3"><LocateFixed size={16}/>{location?"Perbarui lokasi":"Verifikasi lokasi"}</button></div>
+      <div className="panel p-5"><div className="flex justify-between gap-2"><p className="label">Verifikasi lokasi</p>{distance!==null&&<span className={`badge ${inside?"bg-[#e5f7ed] text-[#176b49]":"bg-red-50 text-red-700"}`}>{inside?"Dalam area":"Di luar semua area"}</span>}</div><div className="h-28 rounded-xl bg-[#e6eee9] mt-3 grid place-items-center text-[#196c4a]"><MapPin size={30}/></div><p className="font-bold mt-3">{office?.name||(locationsLoaded?`${offices.length} lokasi aktif tersedia`:"Memuat lokasi…")}</p><p className="text-xs text-[var(--muted)]">{location&&distance!==null?`Akurasi ±${Math.round(location.accuracy)} m · jarak ${Math.round(distance)} m · radius ${office?.radius_meters} m`:`Lokasi belum diverifikasi · ${offices.length} area aktif`}</p><button onClick={locate} disabled={!offices.length} className="btn btn-secondary w-full mt-3 disabled:opacity-50"><LocateFixed size={16}/>{location?"Perbarui lokasi":"Verifikasi lokasi"}</button></div>
       {error&&<p role="alert" className="rounded-xl bg-red-50 text-red-700 text-sm p-3">{error}</p>}<button disabled={!photo||!inside||phase==="saving"} onClick={submit} className="btn btn-primary w-full disabled:opacity-40">{phase==="saving"?"Mengunggah & menyimpan…":"Kirim presensi"}</button>
     </aside>
   </div>;
