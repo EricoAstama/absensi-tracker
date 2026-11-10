@@ -3,7 +3,10 @@ export type EmployeeInput = {
   email?: unknown;
   password?: unknown;
   department?: unknown;
+  role?: unknown;
 };
+
+export type ManagedUserRole = "employee" | "hc_admin";
 
 function text(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -14,6 +17,7 @@ export function validateEmployeeInput(input: EmployeeInput, passwordRequired: bo
   const email = text(input.email).toLowerCase();
   const password = typeof input.password === "string" ? input.password : "";
   const department = text(input.department);
+  const role = text(input.role);
 
   if (fullName.length < 2 || fullName.length > 100) {
     return { error: "Nama lengkap harus terdiri dari 2–100 karakter." } as const;
@@ -30,8 +34,11 @@ export function validateEmployeeInput(input: EmployeeInput, passwordRequired: bo
   if (password && (password.length < 8 || password.length > 72 || !/[A-Za-z]/.test(password) || !/\d/.test(password))) {
     return { error: "Password harus 8–72 karakter serta memuat huruf dan angka." } as const;
   }
+  if (role !== "employee" && role !== "hc_admin") {
+    return { error: "Role akun harus Employee atau HC Admin." } as const;
+  }
 
-  return { data: { fullName, email, password, department } } as const;
+  return { data: { fullName, email, password, department, role: role as ManagedUserRole } } as const;
 }
 
 export function isUuid(value: string) {

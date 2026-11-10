@@ -29,13 +29,13 @@ npm run build
 
 RBAC: Employee hanya mengakses data sendiri; HC Admin dapat mengelola kehadiran, izin, dan ekspor; hanya Superadmin yang dapat mengelola akun serta lokasi dan menghapus data. Endpoint ekspor menghasilkan workbook `.xlsx` dari data Supabase dan hanya tersedia untuk HC Admin/Superadmin.
 
-## Menambahkan employee
+## Mengelola akun Employee dan HC Admin
 
-Superadmin dapat membuka **Pengaturan → Employee** untuk menambah, mengubah, mereset password, atau menghapus akun employee. Saat membuat akun, tombol **Buat otomatis** menghasilkan password yang kuat. Setelah akun dibuat, salin kredensial yang ditampilkan dan bagikan kepada employee melalui kanal yang aman. Employee langsung dapat login tanpa perlu membuka dashboard Supabase. Penghapusan employee juga menghapus presensi dan pengajuan yang terkait.
+Superadmin dapat membuka **Pengaturan → Akun pengguna** untuk menambah Employee atau HC Admin, mengubah profil dan role, mereset password, atau menghapus akun. Saat membuat akun, tombol **Buat otomatis** menghasilkan password yang kuat. Setelah akun dibuat, salin kredensial yang ditampilkan dan bagikan kepada pengguna melalui kanal yang aman. Akun langsung dapat login tanpa perlu membuka dashboard Supabase. Penghapusan Employee juga menghapus presensi dan pengajuan yang terkait.
 
 Pada halaman yang sama, Superadmin dapat menambah, mengubah, mengaktifkan/nonaktifkan, dan menghapus lokasi kantor beserta koordinat dan radius geofencing.
 
-Fitur ini memakai `SUPABASE_SERVICE_ROLE_KEY` hanya di API server. Variabel tersebut wajib tersedia pada environment deployment dan tidak boleh memakai awalan `NEXT_PUBLIC_`. HC Admin dapat melihat daftar employee, tetapi endpoint akan menolak pembuatan akun selain dari Superadmin.
+Fitur ini memakai `SUPABASE_SERVICE_ROLE_KEY` hanya di API server. Variabel tersebut wajib tersedia pada environment deployment dan tidak boleh memakai awalan `NEXT_PUBLIC_`. HC Admin dapat melihat daftar akun, tetapi endpoint akan menolak pengelolaan akun selain dari Superadmin. API hanya menerima role `employee` dan `hc_admin`, sehingga akun Superadmin tidak dapat dibuat atau diubah melalui halaman ini.
 
 ## CI migration Supabase
 

@@ -9,14 +9,14 @@ export async function POST(request: Request) {
   const session = await getSessionProfile();
   if (!session) return NextResponse.json({ message: "Sesi login tidak ditemukan." }, { status: 401 });
   if (!hasPermission(session.profile.role, "user:manage")) {
-    return NextResponse.json({ message: "Hanya Superadmin yang dapat menambahkan employee." }, { status: 403 });
+    return NextResponse.json({ message: "Hanya Superadmin yang dapat menambahkan akun pengguna." }, { status: 403 });
   }
 
   let body: EmployeeInput;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ message: "Data employee tidak dapat dibaca." }, { status: 400 });
+    return NextResponse.json({ message: "Data akun tidak dapat dibaca." }, { status: 400 });
   }
 
   const validated = validateEmployeeInput(body, true);
@@ -24,41 +24,41 @@ export async function POST(request: Request) {
 
   try {
     const admin = createAdminSupabaseClient();
-    const { fullName, email, password, department } = validated.data;
+    const { fullName, email, password, department, role } = validated.data;
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: fullName, department },
+      user_metadata: { full_name: fullName, department, role },
     });
 
     if (authError) {
       const duplicate = /already|registered|exists/i.test(authError.message);
       return NextResponse.json(
-        { message: duplicate ? "Email tersebut sudah digunakan oleh akun lain." : "Akun employee gagal dibuat." },
+        { message: duplicate ? "Email tersebut sudah digunakan oleh akun lain." : "Akun pengguna gagal dibuat." },
         { status: duplicate ? 409 : 400 },
       );
     }
-    if (!authData.user) return NextResponse.json({ message: "Akun employee gagal dibuat." }, { status: 500 });
+    if (!authData.user) return NextResponse.json({ message: "Akun pengguna gagal dibuat." }, { status: 500 });
 
     const { data: profile, error: profileError } = await admin
       .from("profiles")
       .insert({
         id: authData.user.id,
         full_name: fullName,
-        role: "employee",
+        role,
         department,
         updated_at: new Date().toISOString(),
       })
-      .select("id,full_name,department,created_at")
+      .select("id,full_name,department,role,created_at")
       .single();
 
     if (profileError) {
       await admin.auth.admin.deleteUser(authData.user.id);
-      return NextResponse.json({ message: "Profil employee gagal disimpan. Akun dibatalkan." }, { status: 500 });
+      return NextResponse.json({ message: "Profil pengguna gagal disimpan. Akun dibatalkan." }, { status: 500 });
     }
 
-    return NextResponse.json({ employee: profile }, { status: 201 });
+    return NextResponse.json({ account: profile, message: "Akun pengguna berhasil dibuat dan dapat langsung login." }, { status: 201 });
   } catch {
     return NextResponse.json(
       { message: "Layanan pembuatan akun belum siap. Periksa SUPABASE_SERVICE_ROLE_KEY pada environment deployment." },
