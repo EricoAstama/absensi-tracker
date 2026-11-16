@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionProfile } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
+import { displaySlotStatus, type SlotStatus } from "@/lib/attendance";
 import { createAttendanceWorkbook, type AttendanceExportRow } from "@/lib/export-xlsx";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
   const rows: AttendanceExportRow[] = [];
   for (const row of data || []) {
     const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    rows.push({ name: profile?.full_name || "-", date: row.date, s1: time(row.slot_1_time), st1: row.slot_1_status || "absent", s2: time(row.slot_2_time), st2: row.slot_2_status || "absent", s3: time(row.slot_3_time), st3: row.slot_3_status || "absent", s4: time(row.slot_4_time), st4: row.slot_4_status || "absent" });
+    rows.push({ name: profile?.full_name || "-", date: row.date, s1: time(row.slot_1_time), st1: row.slot_1_status || "absent", s2: time(row.slot_2_time), st2: row.slot_2_status || "absent", s3: time(row.slot_3_time), st3: row.slot_3_status || "absent", s4: time(row.slot_4_time), st4: row.slot_4_time ? displaySlotStatus(4, row.slot_4_time, row.slot_4_status as SlotStatus) : "absent" });
   }
   const buffer = await createAttendanceWorkbook(rows);
   return new Response(buffer, { headers: { "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Content-Disposition": `attachment; filename="laporan-absensi-${date}.xlsx"`, "Cache-Control": "private, no-store" } });
