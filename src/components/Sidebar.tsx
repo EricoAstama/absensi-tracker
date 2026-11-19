@@ -4,8 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { CalendarCheck, ClipboardList, LayoutDashboard, LogOut, MapPinned, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-const employee = [[/employee$/,LayoutDashboard,"Ringkasan","/employee"],[/attendance/,CalendarCheck,"Presensi","/employee/attendance"],[/leave/,ClipboardList,"Izin & cuti","/employee/leave"]] as const;
-const admin = [[/hc$/,LayoutDashboard,"Ringkasan","/hc"],[/matrix/,Users,"Matriks","/hc/matrix"],[/leaves/,ClipboardList,"Izin","/hc/leaves"],[/settings/,MapPinned,"Pengaturan","/hc/settings"]] as const;
+const employee = [[/employee$/,LayoutDashboard,"Dashboard","/employee"],[/attendance/,CalendarCheck,"Presensi","/employee/attendance"],[/leave/,ClipboardList,"Izin & cuti","/employee/leave"]] as const;
+const admin = [[/hc$/,LayoutDashboard,"Dashboard","/hc"],[/matrix/,Users,"Matriks","/hc/matrix"],[/leaves/,ClipboardList,"Izin","/hc/leaves"],[/settings/,MapPinned,"Pengaturan","/hc/settings"]] as const;
 
 function LogoutButton({ compact=false }: { compact?: boolean }) {
   const router=useRouter();
