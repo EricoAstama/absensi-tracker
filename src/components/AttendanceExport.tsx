@@ -22,7 +22,7 @@ export function AttendanceExport({ endDate }: { endDate: string }) {
           <option value="month">1 bulan (30 hari)</option>
         </select>
       </div>
-      <div><label htmlFor={`${id}-date`} className="label">Tanggal akhir (WIB)</label>
+      <div><label htmlFor={`${id}-date`} className="label">Tanggal akhir</label>
         <input id={`${id}-date`} name="date" type="date" required value={date} onChange={event => setDate(event.target.value)} className="field mt-1"/>
       </div>
       <button type="submit" disabled={!dates.length} className="btn btn-primary disabled:opacity-50"><Download size={16}/>Unduh Excel</button>
