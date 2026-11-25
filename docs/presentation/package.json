@@ -1,0 +1,13 @@
+{
+  "name": "hadir-use-case-presentation",
+  "private": true,
+  "scripts": {
+    "dev": "slidev slides.md --open",
+    "export": "slidev export slides.md --output use-case-absensi.pdf --executable-path /usr/bin/chromium"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^53.1.0",
+    "@slidev/theme-default": "^0.25.0",
+    "playwright-chromium": "^1.56.1"
+  }
+}
